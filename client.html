@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT HTML Client</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+</head>
+<body>
+
+    <!-- Display received music data and last send time (initially hidden) -->
+    <div id="musicDataContainer" style="display: none;">
+        <h2>Music Data:</h2>
+        <p id="musicData"></p>
+        <p id="lastMessageTime"></p>
+    </div>
+
+    <script>
+        const broker = "theyonetwork.cloud.shiftr.io";
+        const mqtt_port = 443; // We use secure WebSocket port 443 for MQTT
+        const mqtt_user = "theyonetwork";
+        const mqtt_pass = "ConnDevSP24";
+        const clientID = "my_client";
+
+        // The topic to subscribe to
+        const subTopic = "Music";
+
+        const MQTT = new Paho.MQTT.Client(broker, mqtt_port, clientID);
+
+        // Called on successful connection - enables the MQTT message button
+        // You should subscribe to topics in here as well
+        MQTT.connect({
+            onSuccess: mqttConnected, // Callback function for successful connection
+            userName: mqtt_user, // Username
+            password: mqtt_pass, // Password
+            useSSL: true
+        });
+
+        // Handle incoming MQTT messages
+        function mqttConnected() {
+            MQTT.subscribe(subTopic);
+            MQTT.onMessageArrived = handleMQTTMessage; // Callback function for incoming messages
+            console.log("MQTT connected successfully.");
+        }
+
+        // Handle incoming MQTT messages
+        function handleMQTTMessage(msg) {
+            const currentTime = new Date().toLocaleTimeString();
+            const messageContent = `Topic: ${msg.destinationName}, Payload: ${msg.payloadString}`;
+            
+            // Update HTML elements with received message content and time
+            document.querySelector("#musicData").innerHTML = messageContent;
+            document.querySelector("#lastMessageTime").innerHTML = `Last Message Received at: ${currentTime}`;
+            document.querySelector("#musicDataContainer").style.display = "block"; // Show music data container
+        }
+    </script>
+</body>
+</html>
